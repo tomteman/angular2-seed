@@ -5,12 +5,18 @@ import {
 	bootstrap
 } from 'angular2/angular2';
 
+import {angularfire} from 'angularfire';
+
 import { NameList } from 'services/NameList';
 
 
 
 @Component({
-    selector: 'sample-app'
+    selector: 'sample-app',
+    //services: [
+    //    AngularFire,
+    //    bind(Firebase).toValue(new Firebase('https://dazzling-torch-8123.firebaseio.com'))
+    //]
 })
 
 @View({

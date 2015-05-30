@@ -4,6 +4,7 @@ var gulp = require('gulp'),
     del = require('del'),
     plumber = require('gulp-plumber'),
     rename = require('gulp-rename'),
+    runSequence = require('run-sequence'),
     traceur = require('gulp-traceur');
 
 
@@ -24,7 +25,12 @@ var PATHS = {
         'node_modules/angular2/node_modules/zone.js/dist/long-stack-trace-zone.js',
         'node_modules/reflect-metadata/Reflect.js',
         'node_modules/reflect-metadata/Reflect.js.map',
-    ]
+        'node_modules/firebase/lib/firebase-web.js'
+
+    ],
+    angularfire: {
+        js: 'node_modules/angularfire/dist/angularfire.js'
+    }
 };
 
 
@@ -35,6 +41,25 @@ gulp.task('watch', function() {
 
 gulp.task('js', function() {
     return gulp.src(PATHS.src.js)
+        .pipe(rename({
+            extname: ''
+        })) //hack, see: https://github.com/sindresorhus/gulp-traceur/issues/54
+        .pipe(plumber())
+        .pipe(traceur({
+            modules: 'instantiate',
+            moduleName: true,
+            annotations: true,
+            types: true,
+            memberVariables: true
+        }))
+        .pipe(rename({
+            extname: '.js'
+        })) //hack, see: https://github.com/sindresorhus/gulp-traceur/issues/54
+        .pipe(gulp.dest('dist'));
+});
+
+gulp.task('angularfire', function() {
+    return gulp.src(PATHS.angularfire.js)
         .pipe(rename({
             extname: ''
         })) //hack, see: https://github.com/sindresorhus/gulp-traceur/issues/54
@@ -105,10 +130,13 @@ gulp.task('open', function() {
     gulp.src('./index.html')
         .pipe(open('', options));
 });
-
-gulp.task('build', ['js', 'html'])
-gulp.task('default', ['build', 'libs']);
-gulp.task('serve', ['connect', 'open']);
 gulp.task('clean', function(done) {
     del(['dist'], done);
 });
+gulp.task('build', function(callback) {
+    runSequence('clean', ['js', 'angularfire', 'html','libs'], callback);
+});
+
+gulp.task('default', ['build']);
+gulp.task('serve', ['connect', 'open']);
+
